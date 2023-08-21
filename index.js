@@ -33,12 +33,18 @@ app.get("/api/persons", (req, res) => {
   res.json(persons);
 });
 
+app.get("/api/persons/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const person = persons.find((person) => person.id === id);
+  res.json(person);
+});
+
 app.get("/info", (req, res) => {
   let numberOfPeople = 0;
   const date = new Date();
   persons.forEach(() => numberOfPeople++);
   res.send(
-    `<p>Phonebook has info for ${numberOfPeople} people.</p><br /><p>${date}</p>`
+    `<p>Phonebook has info for ${numberOfPeople} people.</p><p>${date}</p>`
   );
 });
 
