@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const morgan = require("morgan");
 
 let persons = [
   {
@@ -44,6 +45,7 @@ app.get("/api/persons/:id", (req, res) => {
 });
 
 app.use(express.json());
+app.use(morgan("tiny"));
 
 app.post("/api/persons", (req, res) => {
   const maxId = persons.length > 0 ? Math.max(...persons.map((x) => x.id)) : 0;
