@@ -43,6 +43,34 @@ app.get("/api/persons/:id", (req, res) => {
   }
 });
 
+app.use(express.json());
+
+app.post("/api/persons", (req, res) => {
+  const maxId = persons.length > 0 ? Math.max(...persons.map((x) => x.id)) : 0;
+  const newPerson = req.body;
+
+  if (!newPerson.name) {
+    return res.status(400).json({ error: "name missing" });
+  }
+
+  if (!newPerson.number) {
+    return res.status(400).json({ error: "number missing" });
+  }
+
+  const personAlreadyExists = persons.find(
+    (person) => person.name === newPerson.name
+  );
+
+  if (personAlreadyExists) {
+    return res
+      .status(400)
+      .json({ error: "Person already exists in phonebook!" });
+  }
+  newPerson.id = maxId + 1;
+  persons = persons.concat(newPerson);
+  res.json(newPerson);
+});
+
 app.delete("/api/persons/:id", (req, res) => {
   const id = Number(req.params.id);
   persons = persons.filter((person) => person.id !== id);
