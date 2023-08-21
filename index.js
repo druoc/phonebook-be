@@ -24,8 +24,13 @@ let persons = [
   },
 ];
 
+//routes
 app.get("/", (req, res) => {
   res.send("<h1>Get off my server!</h1>");
+});
+
+app.get("/api/persons", (req, res) => {
+  res.json(persons);
 });
 
 const PORT = 3001;
