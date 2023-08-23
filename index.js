@@ -5,10 +5,8 @@ const morgan = require("morgan");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-let persons = [];
-
 //database connection
-const url = `mongodb+srv://druoc:${process.env.PASSWORD}@cluster0.cth7xey.mongodb.net/phonebook`;
+const url = process.env.MONGODB_URI;
 
 mongoose.set("strictQuery", false);
 mongoose
@@ -41,16 +39,18 @@ personSchema.set("toJSON", {
 const Person = mongoose.model("Person", personSchema);
 
 app.use(cors());
-app.use(express.static("dist"));
+app.use(express.static("build"));
 
 //routes
-app.get("/api/persons", (req, res) => {
-  Person.find({}).then((persons) => {
-    res.json(persons);
-  });
+app.get("/api/persons", (req, res, next) => {
+  Person.find({})
+    .then((persons) => {
+      res.json(persons);
+    })
+    .catch((error) => next(error));
 });
 
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
   Person.findById(req.params.id)
     .then((person) => {
       if (person) {
@@ -59,16 +59,13 @@ app.get("/api/persons/:id", (req, res) => {
         res.status(404).end();
       }
     })
-    .catch((error) => {
-      console.log(error);
-      res.status(400).send({ error: "incorrectly formatted id" });
-    });
+    .catch((error) => next(error));
 });
 
 app.use(express.json());
 app.use(morgan("tiny"));
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
   const newPerson = req.body;
 
   if (!newPerson.name) {
@@ -84,27 +81,50 @@ app.post("/api/persons", (req, res) => {
     number: newPerson.number,
   });
 
-  person.save().then((savedPerson) => {
-    res.json(savedPerson);
-  });
+  person
+    .save()
+    .then((savedPerson) => {
+      res.json(savedPerson);
+    })
+    .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (req, res) => {
-  Person.findByIdAndRemove(req.params.id).then((result) => {
-    res.status(204).end();
-  });
+app.delete("/api/persons/:id", (req, res, next) => {
+  Person.findByIdAndRemove(req.params.id)
+    .then((result) => {
+      res.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
-app.get("/info", (req, res) => {
+app.get("/info", (req, res, next) => {
   let numberOfPeople = 0;
   const date = new Date();
-  Person.find({}).then((persons) => {
-    persons.forEach(() => numberOfPeople++);
-    res.send(
-      `<p>Phonebook has info for ${numberOfPeople} people.</p><p>${date}</p>`
-    );
-  });
+  Person.find({})
+    .then((persons) => {
+      persons.forEach(() => numberOfPeople++);
+      res.send(
+        `<p>Phonebook has info for ${numberOfPeople} people.</p><p>${date}</p>`
+      );
+    })
+    .catch((error) => next(error));
 });
+
+const unknownEndpoint = (req, res) => {
+  res.status(404).send({ error: "unknown endpoint" });
+};
+
+app.use(unknownEndpoint);
+
+const errorHandler = (error, req, res, next) => {
+  console.error(error.message);
+  if (error.name === "CastError") {
+    return res.status(400).send({ error: "incorrectly formatted id" });
+  }
+  res.status(500).send({ error: "Something went wrong!" });
+};
+
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
