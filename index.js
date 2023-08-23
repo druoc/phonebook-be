@@ -76,15 +76,23 @@ app.post("/api/persons", (req, res, next) => {
     return res.status(400).json({ error: "number missing" });
   }
 
-  const person = new Person({
-    name: newPerson.name,
-    number: newPerson.number,
-  });
+  Person.findOne({ name: newPerson.name })
+    .then((existingPerson) => {
+      if (existingPerson) {
+        existingPerson.number = newPerson.number;
+        existingPerson.save().then((updatedPerson) => {
+          res.json(updatedPerson);
+        });
+      } else {
+        const person = new Person({
+          name: newPerson.name,
+          number: newPerson.number,
+        });
 
-  person
-    .save()
-    .then((savedPerson) => {
-      res.json(savedPerson);
+        person.save().then((savedPerson) => {
+          res.json(savedPerson);
+        });
+      }
     })
     .catch((error) => next(error));
 });
