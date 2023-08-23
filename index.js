@@ -39,7 +39,9 @@ personSchema.set("toJSON", {
 const Person = mongoose.model("Person", personSchema);
 
 app.use(cors());
-app.use(express.static("build"));
+app.use(express.static("dist"));
+app.use(express.json());
+app.use(morgan("tiny"));
 
 //routes
 app.get("/api/persons", (req, res, next) => {
@@ -61,9 +63,6 @@ app.get("/api/persons/:id", (req, res, next) => {
     })
     .catch((error) => next(error));
 });
-
-app.use(express.json());
-app.use(morgan("tiny"));
 
 app.post("/api/persons", (req, res, next) => {
   const newPerson = req.body;
